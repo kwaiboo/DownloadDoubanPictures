@@ -17,7 +17,6 @@ def saveFile(data):#data数据类型接受的是byte型
 
 def ungzip(data):
     try:
-        print('正在解压缩...')
         data=gzip.decompress(data)
         print('解压完成！')
     except:
@@ -25,9 +24,8 @@ def ungzip(data):
     return data
 
 def getXSRF(data):
-    cer=re.compile('Name=\"_xsrf\" Value=\"(.*)\"',flags=0)
-    strList=cer.findall(data)
-    return strList[0]
+    bs=BeautifulSoup(markup=data,features='html.parser')
+    _xsrf = bs.find('input',{'name':'_xsrf'})['value']
 
 def getOpener(header):#创建自动处理 Cookies的opener
     headers=[]
