@@ -1,0 +1,77 @@
+from http import cookiejar
+from bs4 import BeautifulSoup
+import urllib
+import gzip
+import re
+from urllib import request
+from urllib import parse
+import os
+
+def saveFile(data):#data数据类型接受的是byte型
+    savePath='C:\\kankan\\file.txt'
+    if not os.path.isdir(savePath):
+        os.mkdir(savePath)
+    file=open(savePath,'wb')
+    file.write(data)
+    file.close()
+
+def ungzip(data):
+    try:
+        print('正在解压缩...')
+        data=gzip.decompress(data)
+        print('解压完成！')
+    except:
+        print('未经压缩, 无需解压')
+    return data
+
+def getXSRF(data):
+    cer=re.compile('Name=\"_xsrf\" Value=\"(.*)\"',flags=0)
+    strList=cer.findall(data)
+    return strList[0]
+
+def getOpener(header):#创建自动处理 Cookies的opener
+    headers=[]
+    cookieSupport=urllib.request.HTTPCookieProcessor(cookiejar.CookieJar())
+    opener=urllib.request.build_opener(cookieSupport,request.HTTPHandler())
+    request.install_opener(opener)
+    for key, value in header.items():
+        element = (key, value)
+        headers.append(element)
+    opener.addheaders = headers
+    return opener
+
+if __name__=='__main__':
+
+    url = 'https://www.zhihu.com/'
+    headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, sdch, br',
+        'Accept-Language': 'zh-CN,zh;q=0.8',
+        'Cache-Control': 'max-age=0',
+        'Connection': 'keep-alive',
+        'Host': 'www.zhihu.com',
+        'Referer': 'https://www.zhihu.com/',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+    }
+
+    opener=getOpener(headers)
+    html=opener.open(fullurl=url)
+    page=html.read()
+    page=ungzip(page)
+    _xsrf=getXSRF(page.decode())#得到登陆的cookie信息
+    print(_xsrf)
+    loginUrl=url+'#signin'#得到知乎登陆页面
+    email='413361089@qq.com'
+    password='lee413361089'
+    postDict={
+            '_xsrf':_xsrf,
+            'email':email,
+            'password':password,
+            'remember_me':'true'
+            }
+    postData=urllib.parse.urlencode(postDict).encode()
+    html=opener.open(fullurl=loginUrl,data=postData)
+    page=op.read()
+    page=ungzip(page)
+    print(page.decode())
